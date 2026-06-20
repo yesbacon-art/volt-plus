@@ -1,0 +1,2258 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>伏特家 VOLT+ 智能电力交易平台</title>
+    <meta
+      name="description"
+      content="伏特家 VOLT+：实时电价、电力交易、V 币中心、Token 市场、AI 管理与 V 币实物商城。"
+    />
+    <link rel="icon" href="/brand/volt-logo.svg" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f6fffd;
+        --muted: #9eb7bc;
+        --dim: #6e8790;
+        --bg: #07131e;
+        --panel: rgba(10, 28, 43, 0.82);
+        --panel-strong: rgba(8, 22, 35, 0.94);
+        --line: rgba(71, 226, 219, 0.18);
+        --line-soft: rgba(255, 255, 255, 0.09);
+        --brand: #18d5c6;
+        --brand-2: #2b8cff;
+        --green: #41e68e;
+        --gold: #ffd166;
+        --red: #ff5d72;
+        --card: rgba(255, 255, 255, 0.055);
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 320px;
+        scroll-behavior: smooth;
+        background: var(--bg);
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background:
+          radial-gradient(circle at 74% 16%, rgba(25, 213, 198, 0.2), transparent 26%),
+          radial-gradient(circle at 14% 18%, rgba(43, 140, 255, 0.16), transparent 26%),
+          linear-gradient(rgba(67, 226, 219, 0.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(67, 226, 219, 0.045) 1px, transparent 1px),
+          #07131e;
+        background-size: auto, auto, 34px 34px, 34px 34px, auto;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      a:focus-visible {
+        outline: 3px solid rgba(24, 213, 198, 0.4);
+        outline-offset: 2px;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .shell {
+        width: min(1560px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(5, 13, 25, 0.9);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav-inner {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 26px;
+        min-height: 74px;
+      }
+
+      .logo {
+        display: block;
+        width: 168px;
+        height: 56px;
+        object-fit: contain;
+        object-position: left center;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .nav-links a {
+        position: relative;
+        border-radius: 8px;
+        color: rgba(246, 255, 253, 0.82);
+        font-size: 15px;
+        font-weight: 800;
+        padding: 14px 16px;
+      }
+
+      .nav-links a.active,
+      .nav-links a:hover {
+        color: var(--brand);
+        background: rgba(24, 213, 198, 0.08);
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .ghost,
+      .primary,
+      .outline {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        font-weight: 900;
+        padding: 0 18px;
+        white-space: nowrap;
+      }
+
+      .ghost {
+        background: transparent;
+        color: #fff;
+      }
+
+      .primary {
+        border: 0;
+        background: linear-gradient(135deg, #18d5c6, #12b6e5);
+        color: #04151d;
+        box-shadow: 0 12px 28px rgba(24, 213, 198, 0.25);
+      }
+
+      .outline {
+        border-color: rgba(24, 213, 198, 0.42);
+        background: rgba(24, 213, 198, 0.055);
+        color: var(--brand);
+      }
+
+      .round {
+        display: grid;
+        width: 44px;
+        height: 44px;
+        place-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 50%;
+        color: #d8fffb;
+        font-weight: 900;
+      }
+
+      .account-pill {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid rgba(24, 213, 198, 0.28);
+        border-radius: 999px;
+        background: rgba(24, 213, 198, 0.1);
+        color: #d9fffb;
+        font-size: 14px;
+        font-weight: 900;
+        padding: 6px 8px 6px 14px;
+      }
+
+      .account-pill.active {
+        display: inline-flex;
+      }
+
+      .account-pill button {
+        min-height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-weight: 900;
+        padding: 0 12px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(420px, 0.86fr) minmax(580px, 1.14fr);
+        gap: 34px;
+        align-items: center;
+        min-height: 520px;
+        padding: 48px 0 28px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 52px;
+        line-height: 1.08;
+        letter-spacing: 0;
+      }
+
+      .hero h1 span {
+        display: block;
+        margin-top: 10px;
+        color: var(--brand);
+      }
+
+      .hero-copy {
+        margin: 20px 0 0;
+        max-width: 620px;
+        color: #b8cbd0;
+        font-size: 19px;
+        line-height: 1.8;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 28px;
+      }
+
+      .mini-stat {
+        min-width: 0;
+        border-left: 1px solid rgba(255, 255, 255, 0.14);
+        padding-left: 16px;
+      }
+
+      .mini-stat:first-child {
+        border-left: 0;
+        padding-left: 0;
+      }
+
+      .mini-stat .label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .mini-stat strong {
+        display: block;
+        margin-top: 7px;
+        font-size: 20px;
+      }
+
+      .stage {
+        position: relative;
+        min-height: 470px;
+        overflow: hidden;
+        border: 1px solid rgba(24, 213, 198, 0.18);
+        border-radius: 10px;
+        background:
+          radial-gradient(circle at 54% 44%, rgba(24, 213, 198, 0.22), transparent 19%),
+          radial-gradient(circle at 52% 46%, rgba(43, 140, 255, 0.18), transparent 36%),
+          rgba(7, 18, 31, 0.68);
+        box-shadow: var(--shadow);
+      }
+
+      .stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(rgba(71, 226, 219, 0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(71, 226, 219, 0.07) 1px, transparent 1px);
+        background-size: 42px 42px;
+        transform: perspective(600px) rotateX(58deg) translateY(130px) scale(1.35);
+        transform-origin: center;
+      }
+
+      .core {
+        position: absolute;
+        left: 50%;
+        top: 49%;
+        width: 220px;
+        height: 220px;
+        border: 1px solid rgba(24, 213, 198, 0.46);
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, rgba(24, 213, 198, 0.92) 0 9%, transparent 10%),
+          radial-gradient(circle, rgba(24, 213, 198, 0.34) 0 34%, transparent 35%),
+          rgba(24, 213, 198, 0.08);
+        box-shadow:
+          0 0 28px rgba(24, 213, 198, 0.42),
+          inset 0 0 36px rgba(24, 213, 198, 0.26);
+        transform: translate(-50%, -50%);
+      }
+
+      .bolt {
+        position: absolute;
+        left: 50%;
+        top: 30%;
+        width: 82px;
+        height: 150px;
+        background: linear-gradient(180deg, #7ffff6, #18d5c6);
+        clip-path: polygon(48% 0, 100% 0, 64% 42%, 100% 42%, 34% 100%, 45% 56%, 0 56%);
+        filter: drop-shadow(0 0 24px rgba(24, 213, 198, 0.7));
+        transform: translateX(-50%) rotate(7deg);
+      }
+
+      .node {
+        position: absolute;
+        display: grid;
+        width: 116px;
+        min-height: 82px;
+        place-items: center;
+        border: 1px solid rgba(24, 213, 198, 0.26);
+        border-radius: 10px;
+        background: rgba(7, 24, 38, 0.78);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+        color: #d9fffb;
+        font-weight: 900;
+      }
+
+      .node small {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .node-a {
+        left: 13%;
+        top: 20%;
+      }
+
+      .node-b {
+        right: 12%;
+        top: 22%;
+      }
+
+      .node-c {
+        left: 19%;
+        bottom: 17%;
+      }
+
+      .node-d {
+        right: 17%;
+        bottom: 17%;
+      }
+
+      .coin {
+        position: absolute;
+        left: 43%;
+        bottom: 17%;
+        display: grid;
+        width: 74px;
+        height: 74px;
+        place-items: center;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e8fff8, #18d5c6);
+        color: #07303a;
+        font-size: 28px;
+        font-weight: 950;
+        box-shadow: 0 0 30px rgba(24, 213, 198, 0.45);
+      }
+
+      .section-grid {
+        display: grid;
+        grid-template-columns: minmax(360px, 1.05fr) minmax(360px, 0.95fr) minmax(300px, 0.72fr);
+        gap: 14px;
+        align-items: start;
+        margin-top: 18px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .panel.pad {
+        padding: 18px;
+      }
+
+      .panel-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .title-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 10px;
+        background: rgba(24, 213, 198, 0.12);
+        color: var(--brand);
+        font-weight: 950;
+      }
+
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h2 {
+        overflow: hidden;
+        font-size: 20px;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .aside {
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .price-card {
+        min-height: 320px;
+        background:
+          radial-gradient(circle at 50% 95%, rgba(24, 213, 198, 0.19), transparent 38%),
+          rgba(8, 22, 35, 0.94);
+      }
+
+      .price-row {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .price {
+        font-size: 54px;
+        font-weight: 950;
+        line-height: 0.95;
+      }
+
+      .unit,
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .trend {
+        font-size: 16px;
+        font-weight: 950;
+      }
+
+      .trend.up {
+        color: var(--red);
+      }
+
+      .trend.down {
+        color: var(--green);
+      }
+
+      .spark {
+        width: 100%;
+        height: 150px;
+        margin: 16px 0 6px;
+        overflow: visible;
+      }
+
+      .metrics,
+      .market-list,
+      .rows,
+      .mall-grid,
+      .ai-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .metric {
+        min-width: 0;
+        border: 1px solid var(--line-soft);
+        border-radius: 9px;
+        background: var(--card);
+        padding: 12px;
+      }
+
+      .label,
+      label span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 0;
+      }
+
+      .metric strong {
+        display: block;
+        margin-top: 7px;
+        font-size: 18px;
+        line-height: 1.15;
+      }
+
+      .quick-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.07);
+        padding: 4px;
+      }
+
+      .segmented button {
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--muted);
+        padding: 10px 12px;
+        font-weight: 900;
+      }
+
+      .segmented button.active {
+        background: linear-gradient(135deg, #18d5c6, #2b8cff);
+        color: #05131d;
+      }
+
+      .form-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      input {
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 800;
+        padding: 12px;
+      }
+
+      .compact-input {
+        font-size: 12px;
+      }
+
+      .settlement {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px solid rgba(24, 213, 198, 0.18);
+        border-radius: 9px;
+        background: rgba(24, 213, 198, 0.07);
+        padding: 13px;
+      }
+
+      .settlement strong {
+        font-size: 20px;
+      }
+
+      .action {
+        display: inline-flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #18d5c6, #12b6e5);
+        color: #04151d;
+        font-weight: 950;
+        padding: 0 16px;
+        transition:
+          filter 0.16s ease,
+          transform 0.16s ease;
+      }
+
+      .action:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+      }
+
+      .action.dark {
+        background: #0f1f2d;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .action.gold {
+        background: linear-gradient(135deg, #ffd166, #f5a623);
+        color: #08151d;
+      }
+
+      .book-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .book-title {
+        margin-bottom: 8px;
+        color: #d9fffb;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .level,
+      .list-row,
+      .token-card,
+      .mall-card,
+      .ai-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line-soft);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.055);
+      }
+
+      .level {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      .level-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        opacity: 0.16;
+      }
+
+      .level-fill.buy {
+        background: var(--brand-2);
+      }
+
+      .level-fill.sell {
+        background: var(--green);
+      }
+
+      .level-content,
+      .row-flex {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .section-subtitle {
+        margin: 16px 0 9px;
+        color: #d9fffb;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .list-row {
+        padding: 10px 12px;
+        font-size: 14px;
+      }
+
+      .empty {
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        border-radius: 9px;
+        color: var(--muted);
+        padding: 18px 12px;
+        text-align: center;
+      }
+
+      .wallet-box {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .topup-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .topup-row .action {
+        width: auto;
+        min-width: 104px;
+      }
+
+      .token-strip {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(210px, 1fr));
+        gap: 12px;
+        margin: 14px 0 24px;
+      }
+
+      .token-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 92px;
+        padding: 14px;
+      }
+
+      .token-icon,
+      .mall-icon {
+        display: grid;
+        width: 50px;
+        height: 50px;
+        place-items: center;
+        border-radius: 14px;
+        background: radial-gradient(circle at 35% 20%, #e8fffb, #18d5c6 45%, #145b75);
+        color: #06141e;
+        font-weight: 950;
+      }
+
+      .token-card strong {
+        display: block;
+        font-size: 18px;
+      }
+
+      .delta.good {
+        color: var(--green);
+      }
+
+      .delta.bad {
+        color: var(--red);
+      }
+
+      .mini-line {
+        width: 88px;
+        height: 32px;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin: 18px 0 12px;
+      }
+
+      .section-heading h2 {
+        font-size: 22px;
+      }
+
+      .section-heading p {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .ai-grid {
+        grid-template-columns: 1.2fr 0.8fr 1fr;
+      }
+
+      .ai-card {
+        padding: 16px;
+      }
+
+      .ai-card strong {
+        display: block;
+        margin-top: 10px;
+        font-size: 26px;
+      }
+
+      .ai-card p {
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .mall-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .mall-card {
+        min-height: 176px;
+        padding: 16px;
+      }
+
+      .mall-card h3 {
+        margin-top: 14px;
+        font-size: 17px;
+      }
+
+      .mall-card p {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .mall-card .price-v {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 14px;
+        color: var(--gold);
+        font-size: 18px;
+        font-weight: 950;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgba(24, 213, 198, 0.28);
+        border-radius: 999px;
+        background: rgba(24, 213, 198, 0.08);
+        color: var(--brand);
+        font-size: 12px;
+        font-weight: 900;
+        padding: 5px 9px;
+      }
+
+      .feature-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin: 20px 0 34px;
+      }
+
+      .feature {
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 18px 4px 0;
+      }
+
+      .feature strong {
+        display: block;
+        font-size: 18px;
+      }
+
+      .feature p {
+        margin-top: 7px;
+        color: var(--muted);
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 50;
+        max-width: min(420px, calc(100vw - 36px));
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(7, 18, 31, 0.94);
+        box-shadow: var(--shadow);
+        color: #fff;
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .auth-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(1, 8, 15, 0.72);
+        padding: 20px;
+        backdrop-filter: blur(10px);
+      }
+
+      .auth-modal.open {
+        display: flex;
+      }
+
+      .auth-card {
+        position: relative;
+        width: min(460px, 100%);
+        border: 1px solid rgba(24, 213, 198, 0.28);
+        border-radius: 12px;
+        background:
+          radial-gradient(circle at 100% 0%, rgba(24, 213, 198, 0.16), transparent 30%),
+          rgba(7, 18, 31, 0.96);
+        box-shadow: var(--shadow);
+        padding: 22px;
+      }
+
+      .auth-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font-size: 22px;
+      }
+
+      .auth-card h2 {
+        padding-right: 42px;
+        white-space: normal;
+      }
+
+      .auth-card p {
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .auth-form {
+        display: grid;
+        gap: 13px;
+        margin-top: 18px;
+      }
+
+      .auth-message {
+        min-height: 20px;
+        color: var(--gold);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .auth-switch {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: var(--brand);
+        font-weight: 900;
+        padding: 10px 0 0;
+      }
+
+      .address,
+      .hash {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .order-side {
+        display: inline-flex;
+        min-width: 34px;
+        justify-content: center;
+        border-radius: 7px;
+        padding: 5px 8px;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .order-side.buy {
+        background: rgba(43, 140, 255, 0.14);
+        color: #80cbff;
+      }
+
+      .order-side.sell {
+        background: rgba(65, 230, 142, 0.12);
+        color: var(--green);
+      }
+
+      .icon-button {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 1px solid var(--line-soft);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+      }
+
+      .icon-button:hover {
+        border-color: rgba(255, 93, 114, 0.55);
+        color: var(--red);
+      }
+
+      @media (max-width: 1260px) {
+        .nav-inner {
+          grid-template-columns: auto auto;
+        }
+
+        .nav-links {
+          grid-column: 1 / -1;
+          justify-content: flex-start;
+          overflow-x: auto;
+          padding-bottom: 12px;
+        }
+
+        .hero,
+        .section-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .token-strip,
+        .mall-grid,
+        .ai-grid,
+        .feature-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 24px, 680px);
+        }
+
+        .nav-inner {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 10px 0;
+        }
+
+        .nav-actions {
+          justify-content: space-between;
+          flex-wrap: wrap;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 28px;
+        }
+
+        .hero h1 {
+          font-size: 34px;
+        }
+
+        .hero-copy {
+          font-size: 16px;
+        }
+
+        .hero-stats,
+        .metrics,
+        .quick-grid,
+        .wallet-box,
+        .book-grid,
+        .topup-row,
+        .token-strip,
+        .mall-grid,
+        .ai-grid,
+        .feature-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .stage {
+          min-height: 390px;
+        }
+
+        .node {
+          width: 104px;
+        }
+
+        .node-a {
+          left: 6%;
+        }
+
+        .node-b {
+          right: 6%;
+        }
+
+        .price {
+          font-size: 46px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="shell nav-inner">
+        <img class="logo" src="/brand/volt-logo.svg" alt="VOLT+ logo" />
+        <div class="nav-links" aria-label="主导航">
+          <a class="active" href="#home">首页</a>
+          <a href="#trade">电力交易</a>
+          <a href="#vcoin">V币中心</a>
+          <a href="#token">Token市场</a>
+          <a href="#ai">AI管理</a>
+          <a href="/mall.html">V币商城</a>
+          <a href="#help">帮助中心</a>
+        </div>
+        <div class="nav-actions">
+          <button id="loginButton" class="ghost" type="button">登录</button>
+          <button id="registerButton" class="primary" type="button">注册</button>
+          <div id="accountPill" class="account-pill" aria-live="polite">
+            <span id="accountName">演示账户</span>
+            <button id="logoutButton" type="button">退出</button>
+          </div>
+          <span class="round" aria-label="语言">G</span>
+        </div>
+      </div>
+    </nav>
+
+    <main id="home" class="shell">
+      <section class="hero">
+        <div>
+          <h1>新型智能电力交易平台<span>电力自由交易 · 价值自由流通</span></h1>
+          <p class="hero-copy">
+            实时电价、可交易、可购买、可销售。使用 V 币完成电力结算，支持人民币充值 V 币、购买 Token、AI 调度与实物权益兑换。
+          </p>
+          <div class="hero-actions">
+            <a class="primary" href="#trade">开始交易</a>
+            <a class="outline" href="#vcoin">购买V币</a>
+          </div>
+          <div class="hero-stats">
+            <div class="mini-stat">
+              <div class="label">实时在线用户</div>
+              <strong>12,458</strong>
+            </div>
+            <div class="mini-stat">
+              <div class="label">今日交易电量</div>
+              <strong>24,856.75 MWh</strong>
+            </div>
+            <div class="mini-stat">
+              <div class="label">平台交易额</div>
+              <strong>18,745,263 V币</strong>
+            </div>
+            <div class="mini-stat">
+              <div class="label">减少碳排放</div>
+              <strong>8,745.63 吨</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage" aria-label="智能能源网络示意图">
+          <div class="core"></div>
+          <div class="bolt"></div>
+          <div class="coin">V</div>
+          <div class="node node-a">光伏站<small>+38 MW</small></div>
+          <div class="node node-b">风电场<small>+52 MW</small></div>
+          <div class="node node-c">充电站<small>需求 18 MW</small></div>
+          <div class="node node-d">家庭储能<small>回售 6 MW</small></div>
+        </div>
+      </section>
+
+      <section class="section-grid">
+        <div class="panel pad price-card">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">V</span>
+              <h2>实时电价</h2>
+            </div>
+            <span class="aside" id="priceTime">--:--:--</span>
+          </div>
+          <div class="price-row">
+            <div>
+              <div class="price" id="priceValue">0.4827</div>
+              <div class="unit">元/kWh</div>
+            </div>
+            <div class="trend" id="priceTrend">平稳</div>
+          </div>
+          <svg class="spark" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="实时电价曲线">
+            <defs>
+              <linearGradient id="lineGradient" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" stop-color="#2b8cff"></stop>
+                <stop offset="58%" stop-color="#18d5c6"></stop>
+                <stop offset="100%" stop-color="#ffd166"></stop>
+              </linearGradient>
+            </defs>
+            <polyline
+              id="sparkline"
+              fill="none"
+              stroke="url(#lineGradient)"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="4"
+              vector-effect="non-scaling-stroke"
+            ></polyline>
+          </svg>
+          <div class="metrics">
+            <div class="metric">
+              <div class="label">今日最低</div>
+              <strong id="todayLow">0.3121</strong>
+            </div>
+            <div class="metric">
+              <div class="label">今日最高</div>
+              <strong id="todayHigh">0.5832</strong>
+            </div>
+            <div class="metric">
+              <div class="label">电网负荷</div>
+              <strong id="gridLoad">-- MW</strong>
+            </div>
+            <div class="metric">
+              <div class="label">绿电占比</div>
+              <strong id="renewableShare">--%</strong>
+            </div>
+          </div>
+        </div>
+
+        <div id="trade" class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">T</span>
+              <h2>快速交易</h2>
+            </div>
+            <span class="aside" id="tradePrice">-- 元/kWh</span>
+          </div>
+          <div class="form-stack">
+            <div class="segmented" role="tablist" aria-label="交易方向">
+              <button id="buyTab" class="active" type="button">买电</button>
+              <button id="sellTab" type="button">卖电</button>
+            </div>
+            <div class="quick-grid">
+              <label>
+                <span>电量 kWh</span>
+                <input id="quantityInput" inputmode="decimal" value="60" />
+              </label>
+              <label>
+                <span>限价 元/kWh</span>
+                <input id="limitInput" inputmode="decimal" value="0.4827" />
+              </label>
+            </div>
+            <div class="settlement">
+              <span class="muted">预计结算</span>
+              <strong id="estimateVcoin">289.62 V 币</strong>
+            </div>
+            <button id="submitOrder" class="action" type="button">提交买电单</button>
+          </div>
+        </div>
+
+        <div id="vcoin" class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">¥</span>
+              <h2>V币中心</h2>
+            </div>
+            <span class="aside">1 元 = 10 V</span>
+          </div>
+          <div class="wallet-box">
+            <div class="metric">
+              <div class="label">可用 V 币</div>
+              <strong id="vcoinAvailable">--</strong>
+            </div>
+            <div class="metric">
+              <div class="label">冻结 V 币</div>
+              <strong id="vcoinReserved">--</strong>
+            </div>
+          </div>
+          <div class="topup-row">
+            <label>
+              <span>人民币充值</span>
+              <input id="topupInput" inputmode="decimal" value="1000" />
+            </label>
+            <button id="topupButton" class="action gold" type="button">充值 V 币</button>
+          </div>
+          <div class="rows" id="ledger"></div>
+        </div>
+      </section>
+
+      <section class="section-grid">
+        <div class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">M</span>
+              <h2>电力订单簿</h2>
+            </div>
+            <span class="aside">实时撮合</span>
+          </div>
+          <div class="book-grid">
+            <div>
+              <div class="book-title">买盘</div>
+              <div class="rows" id="buyBook"></div>
+            </div>
+            <div>
+              <div class="book-title">卖盘</div>
+              <div class="rows" id="sellBook"></div>
+            </div>
+          </div>
+          <div class="section-subtitle">最新成交</div>
+          <div class="rows" id="trades"></div>
+        </div>
+
+        <div class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">O</span>
+              <h2>我的订单</h2>
+            </div>
+            <span class="aside">VOLT+</span>
+          </div>
+          <div class="rows" id="orders"></div>
+        </div>
+
+        <div class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">S</span>
+              <h2>市场概览</h2>
+            </div>
+            <a class="aside" href="#token">查看更多</a>
+          </div>
+          <div class="market-list">
+            <div class="metric">
+              <div class="label">总交易电量</div>
+              <strong id="marketPower">24,856.75 MWh</strong>
+            </div>
+            <div class="metric">
+              <div class="label">总成交额</div>
+              <strong id="marketValue">18,745,263 V币</strong>
+            </div>
+            <div class="metric">
+              <div class="label">活跃买家 / 卖家</div>
+              <strong>8,745 / 6,240</strong>
+            </div>
+            <div class="metric">
+              <div class="label">可再生能源占比</div>
+              <strong id="marketRenewable">68.45%</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="token">
+        <div class="section-heading">
+          <div>
+            <h2>Token市场</h2>
+            <p>能源资产、虚拟电厂、绿电权益与碳信用代币。</p>
+          </div>
+          <span class="pill">Polygon Sandbox</span>
+        </div>
+        <div class="token-strip">
+          <article class="token-card">
+            <div class="token-icon">V</div>
+            <div><strong>VOLT</strong><span class="muted">VOLT Token</span></div>
+            <div><strong>¥2.45</strong><span class="delta good">+3.25%</span></div>
+          </article>
+          <article class="token-card">
+            <div class="token-icon">P</div>
+            <div><strong>VPP</strong><span class="muted">Virtual Power Plant</span></div>
+            <div><strong>¥1.82</strong><span class="delta good">+1.75%</span></div>
+          </article>
+          <article class="token-card">
+            <div class="token-icon">G</div>
+            <div><strong>GREEN</strong><span class="muted">Green Energy</span></div>
+            <div><strong>¥3.12</strong><span class="delta bad">-0.85%</span></div>
+          </article>
+          <article class="token-card">
+            <div class="token-icon">C</div>
+            <div><strong>CARB</strong><span class="muted">Carbon Credit</span></div>
+            <div><strong>¥4.56</strong><span class="delta good">+2.45%</span></div>
+          </article>
+          <article class="token-card">
+            <div class="token-icon">E</div>
+            <div><strong>EGRID</strong><span class="muted">Energy Grid</span></div>
+            <div><strong>¥2.98</strong><span class="delta good">+1.25%</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-grid">
+        <div class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">T</span>
+              <h2>Token 购买</h2>
+            </div>
+            <span class="aside">Polygon</span>
+          </div>
+          <div class="form-stack">
+            <label>
+              <span>Token 数量</span>
+              <input id="tokenInput" inputmode="decimal" value="120" />
+            </label>
+            <label>
+              <span>EVM 钱包</span>
+              <input
+                id="walletInput"
+                class="compact-input"
+                value="0x742d35cc6634c0532925a3b844bc454e4438f44e"
+              />
+            </label>
+            <div class="settlement">
+              <span class="muted">预计扣款</span>
+              <strong id="tokenCost">2232 V 币</strong>
+            </div>
+            <button id="tokenButton" class="action dark" type="button">购买 Token</button>
+          </div>
+          <div class="rows" id="tokens"></div>
+        </div>
+
+        <div id="ai" class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">AI</span>
+              <h2>AI管理</h2>
+            </div>
+            <span class="aside">智能调度</span>
+          </div>
+          <div class="ai-grid">
+            <article class="ai-card">
+              <span class="label">明日均价预测</span>
+              <strong>0.4678 元/kWh</strong>
+              <p>基于负荷、天气、绿电出力与交易深度，建议低谷买入并保留 30% 储能。</p>
+            </article>
+            <article class="ai-card">
+              <span class="label">策略状态</span>
+              <strong>自动匹配</strong>
+              <p>AI 正在监控订单簿价差、V 币余额和交割窗口。</p>
+            </article>
+            <article class="ai-card">
+              <span class="label">风险提示</span>
+              <strong>中低风险</strong>
+              <p>当前波动处于正常区间，建议单笔交易不超过余额 18%。</p>
+            </article>
+          </div>
+          <button id="aiOptimizeButton" class="action" type="button">启动 AI 优化</button>
+        </div>
+
+        <div class="panel pad">
+          <div class="panel-title">
+            <div class="title-left">
+              <span class="mark">G</span>
+              <h2>电力交割</h2>
+            </div>
+            <span class="aside">sandbox</span>
+          </div>
+          <div class="form-stack">
+            <label>
+              <span>计量点编号</span>
+              <input id="meterInput" value="HD-330106-8842" />
+            </label>
+            <label>
+              <span>交割 kWh</span>
+              <input id="deliveryKwhInput" inputmode="decimal" value="80" />
+            </label>
+            <label>
+              <span>交割窗口</span>
+              <input id="deliveryWindowInput" class="compact-input" value="2026-06-12 09:00-11:00" />
+            </label>
+            <button id="deliveryButton" class="action" type="button">创建交割指令</button>
+          </div>
+          <div class="rows" id="deliveries"></div>
+        </div>
+      </section>
+
+      <section id="mall-preview">
+        <div class="section-heading">
+          <div>
+            <h2>V币实物商城</h2>
+            <p>独立商城页支持用 V 币购买智能用电设备、绿电权益和家庭能源服务。</p>
+          </div>
+          <a class="pill" href="/mall.html">进入商城</a>
+        </div>
+        <div class="mall-grid">
+          <article class="mall-card">
+            <div class="mall-icon">B</div>
+            <h3>家庭储能电池</h3>
+            <p>5kWh 模块化储能，支持峰谷套利和应急供电。</p>
+            <div class="price-v"><span>32,800 V</span><a class="outline" href="/mall.html">V币购买</a></div>
+          </article>
+          <article class="mall-card">
+            <div class="mall-icon">C</div>
+            <h3>智能充电桩</h3>
+            <p>自动选择低价时段充电，接入 VOLT+ 交易策略。</p>
+            <div class="price-v"><span>18,600 V</span><a class="outline" href="/mall.html">V币购买</a></div>
+          </article>
+          <article class="mall-card">
+            <div class="mall-icon">S</div>
+            <h3>光伏运维套餐</h3>
+            <p>屋顶光伏检测、清洁、收益优化和余电回售建议。</p>
+            <div class="price-v"><span>6,800 V</span><a class="outline" href="/mall.html">V币购买</a></div>
+          </article>
+          <article class="mall-card">
+            <div class="mall-icon">R</div>
+            <h3>绿电权益卡</h3>
+            <p>兑换家庭绿电权益和碳减排凭证展示服务。</p>
+            <div class="price-v"><span>2,400 V</span><a class="outline" href="/mall.html">V币购买</a></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="help" class="feature-strip">
+        <div class="feature">
+          <strong>安全可靠</strong>
+          <p>多重加密、账本追踪、资金与交割状态可审计。</p>
+        </div>
+        <div class="feature">
+          <strong>智能高效</strong>
+          <p>AI 驱动撮合、预测和家庭能源策略推荐。</p>
+        </div>
+        <div class="feature">
+          <strong>绿色低碳</strong>
+          <p>促进可再生能源交易和碳减排资产流通。</p>
+        </div>
+        <div class="feature">
+          <strong>开放透明</strong>
+          <p>Token 购买、V 币流转和电力交割记录清晰展示。</p>
+        </div>
+      </section>
+    </main>
+    <div id="authModal" class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authTitle" aria-hidden="true" hidden>
+      <div class="auth-card">
+        <button id="authClose" class="auth-close" type="button" aria-label="关闭">×</button>
+        <span class="pill">VOLT+ Account</span>
+        <h2 id="authTitle">注册伏特家账户</h2>
+        <p id="authSubtitle">创建演示账户后会自动登录，账户信息只保存在当前浏览器本地。</p>
+        <form id="authForm" class="auth-form">
+          <label id="authNameWrap">
+            <span>昵称 / 企业名</span>
+            <input id="authNameInput" autocomplete="name" placeholder="例如：伏特家体验用户" required />
+          </label>
+          <label>
+            <span>手机 / 邮箱</span>
+            <input id="authContactInput" autocomplete="username" inputmode="email" placeholder="demo@volt.plus" required />
+          </label>
+          <label>
+            <span>密码</span>
+            <input id="authPasswordInput" type="password" autocomplete="current-password" minlength="6" placeholder="至少 6 位" required />
+          </label>
+          <div id="authMessage" class="auth-message"></div>
+          <button id="authSubmit" class="action" type="submit">创建并登录</button>
+          <button id="authSwitch" class="auth-switch" type="button">已有账户？去登录</button>
+        </form>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status">VOLT+ 已就绪</div>
+
+    <script>
+      const VCOIN_PER_CNY = 10;
+      const TOKEN_PRICE_VCOIN = 18.6;
+      const state = {
+        side: "BUY",
+        ticks: [],
+        wallet: {
+          available: 12800,
+          reserved: 0,
+          token: 0
+        },
+        orders: [
+          order("seed_sell_1", "SELL", 168, 0.712, "grid_pool_south"),
+          order("seed_sell_2", "SELL", 96, 0.735, "storage_pool_east"),
+          order("seed_buy_1", "BUY", 140, 0.682, "park_microgrid"),
+          order("seed_buy_2", "BUY", 220, 0.665, "charging_station_a")
+        ],
+        trades: [],
+        ledger: [
+          {
+            id: id("ledger"),
+            type: "TOPUP",
+            amount: 12800,
+            text: "演示账户初始 V 币额度",
+            at: new Date()
+          }
+        ],
+        tokens: [],
+        deliveries: []
+      };
+
+      const el = {
+        priceValue: document.querySelector("#priceValue"),
+        priceTrend: document.querySelector("#priceTrend"),
+        priceTime: document.querySelector("#priceTime"),
+        tradePrice: document.querySelector("#tradePrice"),
+        gridLoad: document.querySelector("#gridLoad"),
+        renewableShare: document.querySelector("#renewableShare"),
+        marketRenewable: document.querySelector("#marketRenewable"),
+        todayLow: document.querySelector("#todayLow"),
+        todayHigh: document.querySelector("#todayHigh"),
+        sparkline: document.querySelector("#sparkline"),
+        buyTab: document.querySelector("#buyTab"),
+        sellTab: document.querySelector("#sellTab"),
+        quantityInput: document.querySelector("#quantityInput"),
+        limitInput: document.querySelector("#limitInput"),
+        estimateVcoin: document.querySelector("#estimateVcoin"),
+        submitOrder: document.querySelector("#submitOrder"),
+        buyBook: document.querySelector("#buyBook"),
+        sellBook: document.querySelector("#sellBook"),
+        trades: document.querySelector("#trades"),
+        orders: document.querySelector("#orders"),
+        vcoinAvailable: document.querySelector("#vcoinAvailable"),
+        vcoinReserved: document.querySelector("#vcoinReserved"),
+        topupInput: document.querySelector("#topupInput"),
+        topupButton: document.querySelector("#topupButton"),
+        ledger: document.querySelector("#ledger"),
+        tokenInput: document.querySelector("#tokenInput"),
+        walletInput: document.querySelector("#walletInput"),
+        tokenCost: document.querySelector("#tokenCost"),
+        tokenButton: document.querySelector("#tokenButton"),
+        tokens: document.querySelector("#tokens"),
+        meterInput: document.querySelector("#meterInput"),
+        deliveryKwhInput: document.querySelector("#deliveryKwhInput"),
+        deliveryWindowInput: document.querySelector("#deliveryWindowInput"),
+        deliveryButton: document.querySelector("#deliveryButton"),
+        deliveries: document.querySelector("#deliveries"),
+        aiOptimizeButton: document.querySelector("#aiOptimizeButton"),
+        loginButton: document.querySelector("#loginButton"),
+        registerButton: document.querySelector("#registerButton"),
+        accountPill: document.querySelector("#accountPill"),
+        accountName: document.querySelector("#accountName"),
+        logoutButton: document.querySelector("#logoutButton"),
+        authModal: document.querySelector("#authModal"),
+        authClose: document.querySelector("#authClose"),
+        authTitle: document.querySelector("#authTitle"),
+        authSubtitle: document.querySelector("#authSubtitle"),
+        authForm: document.querySelector("#authForm"),
+        authNameWrap: document.querySelector("#authNameWrap"),
+        authNameInput: document.querySelector("#authNameInput"),
+        authContactInput: document.querySelector("#authContactInput"),
+        authPasswordInput: document.querySelector("#authPasswordInput"),
+        authMessage: document.querySelector("#authMessage"),
+        authSubmit: document.querySelector("#authSubmit"),
+        authSwitch: document.querySelector("#authSwitch"),
+        toast: document.querySelector("#toast")
+      };
+
+      const auth = {
+        mode: "register",
+        session: loadSession()
+      };
+
+      function id(prefix) {
+        return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function order(orderId, side, quantity, price, account = "acct_volt_demo") {
+        return {
+          id: orderId,
+          side,
+          account,
+          quantity,
+          remaining: quantity,
+          price,
+          status: "OPEN",
+          at: new Date()
+        };
+      }
+
+      function tick(now = Date.now()) {
+        const wave = Math.sin(now / 18000);
+        const fast = Math.cos(now / 7000);
+        const price = round(0.724 + wave * 0.082 + fast * 0.028, 3);
+        const previous = state.ticks.at(-1)?.price ?? price;
+        const item = {
+          price,
+          load: Math.round(6240 + wave * 380 + fast * 145),
+          renewable: Math.max(18, Math.min(72, Math.round(44 + fast * 14))),
+          trend: price > previous + 0.004 ? "up" : price < previous - 0.004 ? "down" : "flat",
+          at: new Date(now)
+        };
+        state.ticks.push(item);
+        state.ticks = state.ticks.slice(-42);
+      }
+
+      function round(value, digits = 2) {
+        const factor = 10 ** digits;
+        return Math.round(value * factor) / factor;
+      }
+
+      function vcoinForPower(kwh, price) {
+        return round(kwh * price * VCOIN_PER_CNY, 2);
+      }
+
+      function money(value) {
+        return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(value);
+      }
+
+      function time(value) {
+        return new Intl.DateTimeFormat("zh-CN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        }).format(value);
+      }
+
+      function currentTick() {
+        return state.ticks.at(-1);
+      }
+
+      function show(message) {
+        el.toast.textContent = message;
+        el.toast.style.opacity = "1";
+        window.clearTimeout(show.timeout);
+        show.timeout = window.setTimeout(() => {
+          el.toast.style.opacity = "0.72";
+        }, 2600);
+      }
+
+      function loadUsers() {
+        try {
+          return JSON.parse(localStorage.getItem("voltUsers") || "[]");
+        } catch {
+          return [];
+        }
+      }
+
+      function saveUsers(users) {
+        localStorage.setItem("voltUsers", JSON.stringify(users));
+      }
+
+      function loadSession() {
+        try {
+          return JSON.parse(localStorage.getItem("voltSession") || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function saveSession(user) {
+        auth.session = user;
+        localStorage.setItem("voltSession", JSON.stringify(user));
+        renderAuth();
+      }
+
+      function clearSession() {
+        auth.session = null;
+        localStorage.removeItem("voltSession");
+        renderAuth();
+      }
+
+      function openAuth(mode) {
+        auth.mode = mode;
+        el.authMessage.textContent = "";
+        el.authPasswordInput.value = "";
+        if (mode === "register") {
+          el.authTitle.textContent = "注册伏特家账户";
+          el.authSubtitle.textContent = "创建演示账户后会自动登录，账户信息只保存在当前浏览器本地。";
+          el.authNameWrap.style.display = "block";
+          el.authNameInput.disabled = false;
+          el.authNameInput.required = true;
+          el.authSubmit.textContent = "创建并登录";
+          el.authSwitch.textContent = "已有账户？去登录";
+          el.authNameInput.value = "";
+          el.authContactInput.value = "";
+          el.authPasswordInput.setAttribute("autocomplete", "new-password");
+        } else {
+          el.authTitle.textContent = "登录伏特家账户";
+          el.authSubtitle.textContent = "使用本地演示账户进入 V 币中心、Token 市场和 AI 管理。";
+          el.authNameWrap.style.display = "none";
+          el.authNameInput.disabled = true;
+          el.authNameInput.required = false;
+          el.authSubmit.textContent = "登录账户";
+          el.authSwitch.textContent = "没有账户？去注册";
+          el.authPasswordInput.setAttribute("autocomplete", "current-password");
+        }
+        el.authModal.classList.add("open");
+        el.authModal.removeAttribute("hidden");
+        el.authModal.setAttribute("aria-hidden", "false");
+        window.setTimeout(() => el.authContactInput.focus(), 0);
+      }
+
+      function closeAuth() {
+        el.authModal.classList.remove("open");
+        el.authModal.setAttribute("hidden", "");
+        el.authModal.setAttribute("aria-hidden", "true");
+      }
+
+      function submitAuth(event) {
+        event.preventDefault();
+        const users = loadUsers();
+        const contact = el.authContactInput.value.trim().toLowerCase();
+        const password = el.authPasswordInput.value;
+        const name = el.authNameInput.value.trim() || "伏特家用户";
+
+        if (!contact.includes("@") && !/^1\d{10}$/.test(contact)) {
+          el.authMessage.textContent = "请输入有效邮箱或 11 位手机号。";
+          return;
+        }
+        if (password.length < 6) {
+          el.authMessage.textContent = "密码至少需要 6 位。";
+          return;
+        }
+
+        if (auth.mode === "register") {
+          if (users.some((user) => user.contact === contact)) {
+            el.authMessage.textContent = "该账号已注册，可以直接登录。";
+            return;
+          }
+          const user = {
+            id: id("user"),
+            name,
+            contact,
+            password,
+            createdAt: new Date().toISOString()
+          };
+          users.push(user);
+          saveUsers(users);
+          saveSession({ id: user.id, name: user.name, contact: user.contact });
+          closeAuth();
+          show(`欢迎加入伏特家，${user.name}`);
+          return;
+        }
+
+        const matched = users.find((user) => user.contact === contact && user.password === password);
+        if (!matched) {
+          el.authMessage.textContent = "账号或密码不正确。";
+          return;
+        }
+        saveSession({ id: matched.id, name: matched.name, contact: matched.contact });
+        closeAuth();
+        show(`欢迎回来，${matched.name}`);
+      }
+
+      function renderAuth() {
+        const loggedIn = Boolean(auth.session);
+        el.loginButton.style.display = loggedIn ? "none" : "inline-flex";
+        el.registerButton.style.display = loggedIn ? "none" : "inline-flex";
+        el.accountPill.classList.toggle("active", loggedIn);
+        if (loggedIn) {
+          el.accountName.textContent = auth.session.name;
+        }
+      }
+
+      function setSide(side) {
+        state.side = side;
+        el.buyTab.classList.toggle("active", side === "BUY");
+        el.sellTab.classList.toggle("active", side === "SELL");
+        el.submitOrder.textContent = side === "BUY" ? "提交买电单" : "提交卖电单";
+        estimate();
+      }
+
+      function estimate() {
+        const kwh = Number(el.quantityInput.value) || 0;
+        const price = Number(el.limitInput.value) || 0;
+        el.estimateVcoin.textContent = `${money(vcoinForPower(kwh, price))} V 币`;
+        const tokenAmount = Number(el.tokenInput.value) || 0;
+        el.tokenCost.textContent = `${money(round(tokenAmount * TOKEN_PRICE_VCOIN, 2))} V 币`;
+      }
+
+      function placeOrder() {
+        const quantity = round(Number(el.quantityInput.value) || 0, 2);
+        const price = round(Number(el.limitInput.value) || 0, 3);
+        if (quantity <= 0 || price <= 0) {
+          show("请输入有效的电量和限价");
+          return;
+        }
+
+        const incoming = order(id("order"), state.side, quantity, price);
+        if (incoming.side === "BUY") {
+          const reserve = vcoinForPower(quantity, price);
+          if (state.wallet.available < reserve) {
+            show("V 币余额不足，无法提交买电单");
+            return;
+          }
+          state.wallet.available = round(state.wallet.available - reserve, 2);
+          state.wallet.reserved = round(state.wallet.reserved + reserve, 2);
+          addLedger("ORDER_RESERVE", -reserve, `冻结买电资金 ${money(reserve)} V 币`);
+        }
+
+        match(incoming);
+        state.orders.unshift(incoming);
+        show(incoming.side === "BUY" ? "买电单已提交" : "卖电单已提交");
+        render();
+      }
+
+      function match(incoming) {
+        const opposite = state.orders
+          .filter((candidate) => {
+            if (candidate.status === "FILLED" || candidate.status === "CANCELLED") return false;
+            if (candidate.side === incoming.side) return false;
+            if (incoming.side === "BUY") return candidate.price <= incoming.price;
+            return candidate.price >= incoming.price;
+          })
+          .sort((a, b) => (incoming.side === "BUY" ? a.price - b.price : b.price - a.price));
+
+        for (const candidate of opposite) {
+          if (incoming.remaining <= 0) break;
+          const quantity = round(Math.min(incoming.remaining, candidate.remaining), 2);
+          const price = candidate.price;
+          const notional = vcoinForPower(quantity, price);
+
+          incoming.remaining = round(incoming.remaining - quantity, 2);
+          candidate.remaining = round(candidate.remaining - quantity, 2);
+          candidate.status = candidate.remaining <= 0 ? "FILLED" : "PARTIALLY_FILLED";
+
+          if (incoming.side === "BUY") {
+            state.wallet.reserved = round(state.wallet.reserved - notional, 2);
+            const reservedAtLimit = vcoinForPower(quantity, incoming.price);
+            const release = round(reservedAtLimit - notional, 2);
+            if (release > 0) {
+              state.wallet.reserved = round(state.wallet.reserved - release, 2);
+              state.wallet.available = round(state.wallet.available + release, 2);
+              addLedger("ORDER_RELEASE", release, `释放优价成交差额 ${money(release)} V 币`);
+            }
+            addLedger("POWER_BUY", -notional, `买入 ${quantity.toFixed(2)} kWh 电力`);
+          } else {
+            state.wallet.available = round(state.wallet.available + notional, 2);
+            addLedger("POWER_SELL", notional, `卖出 ${quantity.toFixed(2)} kWh 电力`);
+          }
+
+          state.trades.unshift({
+            id: id("trade"),
+            side: incoming.side,
+            quantity,
+            price,
+            notional,
+            at: new Date()
+          });
+        }
+
+        incoming.status =
+          incoming.remaining <= 0
+            ? "FILLED"
+            : incoming.remaining < incoming.quantity
+              ? "PARTIALLY_FILLED"
+              : "OPEN";
+      }
+
+      function cancelOrder(orderId) {
+        const target = state.orders.find((item) => item.id === orderId);
+        if (!target || (target.status !== "OPEN" && target.status !== "PARTIALLY_FILLED")) return;
+        target.status = "CANCELLED";
+        if (target.side === "BUY" && target.account === "acct_volt_demo") {
+          const release = vcoinForPower(target.remaining, target.price);
+          state.wallet.reserved = round(Math.max(0, state.wallet.reserved - release), 2);
+          state.wallet.available = round(state.wallet.available + release, 2);
+          addLedger("ORDER_RELEASE", release, `取消买单释放 ${money(release)} V 币`);
+        }
+        show("订单已取消");
+        render();
+      }
+
+      function addLedger(type, amount, text) {
+        state.ledger.unshift({
+          id: id("ledger"),
+          type,
+          amount: round(amount, 2),
+          text,
+          at: new Date()
+        });
+      }
+
+      function topup() {
+        const cny = round(Number(el.topupInput.value) || 0, 2);
+        if (cny < 1) {
+          show("充值金额不能低于 1 元");
+          return;
+        }
+        const vcoin = round(cny * VCOIN_PER_CNY, 2);
+        state.wallet.available = round(state.wallet.available + vcoin, 2);
+        addLedger("TOPUP", vcoin, `人民币沙盒充值 ${money(cny)} 元`);
+        show(`已充值 ${money(vcoin)} V 币`);
+        render();
+      }
+
+      function purchaseToken() {
+        const amount = round(Number(el.tokenInput.value) || 0, 4);
+        const address = el.walletInput.value.trim();
+        const validAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+        if (amount <= 0 || !validAddress) {
+          show("请输入有效 Token 数量和 EVM 钱包地址");
+          return;
+        }
+        const cost = round(amount * TOKEN_PRICE_VCOIN, 2);
+        if (state.wallet.available < cost) {
+          show("V 币余额不足，无法购买 Token");
+          return;
+        }
+        state.wallet.available = round(state.wallet.available - cost, 2);
+        state.wallet.token = round(state.wallet.token + amount, 4);
+        const receipt = {
+          id: id("token"),
+          amount,
+          cost,
+          address,
+          status: "SANDBOX_CONFIRMED",
+          hash: sandboxHash(),
+          at: new Date()
+        };
+        state.tokens.unshift(receipt);
+        addLedger("TOKEN_PURCHASE", -cost, `购买 ${amount.toFixed(2)} Token`);
+        show("Token 购买已确认");
+        render();
+      }
+
+      function sandboxHash() {
+        return `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
+      }
+
+      function createDelivery() {
+        const meter = el.meterInput.value.trim();
+        const quantity = round(Number(el.deliveryKwhInput.value) || 0, 2);
+        const windowText = el.deliveryWindowInput.value.trim();
+        if (meter.length < 3 || quantity <= 0 || windowText.length < 6) {
+          show("请输入有效交割信息");
+          return;
+        }
+        state.deliveries.unshift({
+          id: id("delivery"),
+          meter,
+          quantity,
+          window: windowText,
+          status: "ACCEPTED",
+          ref: id("grid-sandbox"),
+          at: new Date()
+        });
+        show("交割指令已创建");
+        render();
+      }
+
+      function render() {
+        renderPrice();
+        renderBooks();
+        renderTrades();
+        renderOrders();
+        renderWallet();
+        renderTokens();
+        renderDeliveries();
+        estimate();
+      }
+
+      function renderPrice() {
+        const item = currentTick();
+        if (!item) return;
+        el.priceValue.textContent = item.price.toFixed(3);
+        el.limitInput.value = el.limitInput.matches(":focus")
+          ? el.limitInput.value
+          : item.price.toFixed(3);
+        el.tradePrice.textContent = `${item.price.toFixed(3)} 元/kWh`;
+        el.priceTime.textContent = time(item.at);
+        el.gridLoad.textContent = `${money(item.load)} MW`;
+        el.renewableShare.textContent = `${item.renewable}%`;
+        el.marketRenewable.textContent = `${Math.max(50, item.renewable + 12).toFixed(2)}%`;
+        el.priceTrend.className = `trend ${item.trend}`;
+        el.priceTrend.textContent =
+          item.trend === "up" ? "上行" : item.trend === "down" ? "下行" : "平稳";
+
+        const prices = state.ticks.map((point) => point.price);
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        const spread = Math.max(0.001, max - min);
+        el.todayLow.textContent = min.toFixed(3);
+        el.todayHigh.textContent = max.toFixed(3);
+        el.sparkline.setAttribute(
+          "points",
+          state.ticks
+            .map((point, index) => {
+              const x = (index / Math.max(1, state.ticks.length - 1)) * 100;
+              const y = 82 - ((point.price - min) / spread) * 64;
+              return `${x.toFixed(2)},${y.toFixed(2)}`;
+            })
+            .join(" ")
+        );
+      }
+
+      function renderBooks() {
+        drawLevels(el.buyBook, levels("BUY"), "buy");
+        drawLevels(el.sellBook, levels("SELL"), "sell");
+      }
+
+      function levels(side) {
+        const map = new Map();
+        for (const item of state.orders) {
+          if (item.side !== side || item.status === "FILLED" || item.status === "CANCELLED") continue;
+          map.set(item.price, round((map.get(item.price) || 0) + item.remaining, 2));
+        }
+        return [...map.entries()]
+          .map(([price, quantity]) => ({ price, quantity }))
+          .sort((a, b) => (side === "BUY" ? b.price - a.price : a.price - b.price))
+          .slice(0, 8);
+      }
+
+      function drawLevels(container, rows, tone) {
+        if (!rows.length) {
+          container.innerHTML = '<div class="empty">暂无挂单</div>';
+          return;
+        }
+        const max = Math.max(...rows.map((item) => item.quantity), 1);
+        container.innerHTML = rows
+          .map(
+            (item) => `
+              <div class="level">
+                <div class="level-fill ${tone}" style="width:${Math.max(12, (item.quantity / max) * 100)}%"></div>
+                <div class="level-content">
+                  <strong>${item.price.toFixed(3)}</strong>
+                  <span>${item.quantity.toFixed(2)}</span>
+                </div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderTrades() {
+        if (!state.trades.length) {
+          el.trades.innerHTML = '<div class="empty">暂无成交</div>';
+          return;
+        }
+        el.trades.innerHTML = state.trades
+          .slice(0, 5)
+          .map(
+            (item) => `
+              <div class="list-row">
+                <div class="row-flex">
+                  <span>${time(item.at)}</span>
+                  <strong>${item.quantity.toFixed(2)} kWh</strong>
+                  <span>${item.price.toFixed(3)}</span>
+                </div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderOrders() {
+        const mine = state.orders.filter((item) => item.account === "acct_volt_demo").slice(0, 10);
+        if (!mine.length) {
+          el.orders.innerHTML = '<div class="empty">暂无订单</div>';
+          return;
+        }
+        el.orders.innerHTML = mine
+          .map(
+            (item) => `
+              <div class="list-row">
+                <div class="row-flex">
+                  <span class="order-side ${item.side === "BUY" ? "buy" : "sell"}">${item.side === "BUY" ? "买" : "卖"}</span>
+                  <div style="min-width:0; flex:1">
+                    <strong>${item.remaining.toFixed(2)} / ${item.quantity.toFixed(2)} kWh</strong>
+                    <div class="muted">${item.price.toFixed(3)} 元/kWh · ${item.status}</div>
+                  </div>
+                  <button class="icon-button" title="取消订单" aria-label="取消订单" data-cancel="${item.id}" ${item.status === "FILLED" || item.status === "CANCELLED" ? "disabled" : ""}>×</button>
+                </div>
+              </div>
+            `
+          )
+          .join("");
+        for (const button of el.orders.querySelectorAll("[data-cancel]")) {
+          button.addEventListener("click", () => cancelOrder(button.dataset.cancel));
+        }
+      }
+
+      function renderWallet() {
+        el.vcoinAvailable.textContent = money(state.wallet.available);
+        el.vcoinReserved.textContent = money(state.wallet.reserved);
+        el.ledger.innerHTML = state.ledger
+          .slice(0, 4)
+          .map(
+            (item) => `
+              <div class="list-row">
+                <div class="row-flex">
+                  <div style="min-width:0">
+                    <strong>${item.text}</strong>
+                    <div class="muted">${time(item.at)}</div>
+                  </div>
+                  <strong style="color:${item.amount >= 0 ? "var(--green)" : "var(--red)"}">${item.amount >= 0 ? "+" : ""}${money(item.amount)}</strong>
+                </div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderTokens() {
+        if (!state.tokens.length) {
+          el.tokens.innerHTML = `
+            <div class="list-row">
+              <div class="muted">合约：0x0000000000000000000000000000000000000000</div>
+              <div class="muted">Token 余额：${money(state.wallet.token)}</div>
+            </div>
+          `;
+          return;
+        }
+        el.tokens.innerHTML = state.tokens
+          .slice(0, 3)
+          .map(
+            (item) => `
+              <div class="list-row">
+                <div class="row-flex">
+                  <strong>${item.amount.toFixed(2)} Token</strong>
+                  <span style="color:var(--green); font-weight:850">${item.status}</span>
+                </div>
+                <div class="muted address">${item.address}</div>
+                <div class="muted hash">${item.hash}</div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderDeliveries() {
+        if (!state.deliveries.length) {
+          el.deliveries.innerHTML = '<div class="empty">暂无交割指令</div>';
+          return;
+        }
+        el.deliveries.innerHTML = state.deliveries
+          .slice(0, 3)
+          .map(
+            (item) => `
+              <div class="list-row">
+                <div class="row-flex">
+                  <strong>${item.quantity.toFixed(2)} kWh</strong>
+                  <span style="color:var(--green); font-weight:850">${item.status}</span>
+                </div>
+                <div class="muted address">${item.meter} · ${item.window}</div>
+                <div class="muted hash">${item.ref}</div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      el.buyTab.addEventListener("click", () => setSide("BUY"));
+      el.sellTab.addEventListener("click", () => setSide("SELL"));
+      el.quantityInput.addEventListener("input", estimate);
+      el.limitInput.addEventListener("input", estimate);
+      el.tokenInput.addEventListener("input", estimate);
+      el.submitOrder.addEventListener("click", placeOrder);
+      el.topupButton.addEventListener("click", topup);
+      el.tokenButton.addEventListener("click", purchaseToken);
+      el.deliveryButton.addEventListener("click", createDelivery);
+      el.aiOptimizeButton.addEventListener("click", () => show("AI 已生成下一轮买卖与储能优化策略"));
+      el.loginButton.addEventListener("click", () => openAuth("login"));
+      el.registerButton.addEventListener("click", () => openAuth("register"));
+      el.authClose.addEventListener("click", closeAuth);
+      el.authModal.addEventListener("click", (event) => {
+        if (event.target === el.authModal) closeAuth();
+      });
+      el.authSwitch.addEventListener("click", () => {
+        openAuth(auth.mode === "register" ? "login" : "register");
+      });
+      el.authForm.addEventListener("submit", submitAuth);
+      el.logoutButton.addEventListener("click", () => {
+        clearSession();
+        show("已退出登录");
+      });
+      for (let i = 30; i >= 0; i -= 1) tick(Date.now() - i * 90000);
+      renderAuth();
+      render();
+      window.setInterval(() => {
+        tick();
+        renderPrice();
+        estimate();
+      }, 2500);
+    </script>
+  </body>
+</html>

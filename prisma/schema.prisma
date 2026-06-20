@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KycStatus {
+  PENDING
+  REVIEW_REQUIRED
+  VERIFIED
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderStatus {
+  OPEN
+  PARTIALLY_FILLED
+  FILLED
+  CANCELLED
+}
+
+enum LedgerType {
+  TOPUP
+  POWER_BUY
+  POWER_SELL
+  ORDER_RESERVE
+  ORDER_RELEASE
+  TOKEN_PURCHASE
+  DELIVERY_SETTLEMENT
+  MALL_PURCHASE
+  MALL_REFUND
+}
+
+enum TopupStatus {
+  CREATED
+  CONFIRMED
+  FAILED
+}
+
+enum TokenPurchaseStatus {
+  REQUESTED
+  AWAITING_TREASURY
+  BROADCAST
+  CONFIRMED
+  SANDBOX_CONFIRMED
+  FAILED
+}
+
+enum DeliveryStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  SCHEDULED
+  DELIVERING
+  SETTLED
+}
+
+enum MallOrderStatus {
+  CREATED
+  PAID
+  FULFILLING
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+model Account {
+  id             String                @id @default(cuid())
+  email          String?               @unique
+  phone          String?               @unique
+  passwordHash   String?
+  displayName    String
+  kycStatus      KycStatus             @default(PENDING)
+  emailVerifiedAt DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  wallet         Wallet?
+  sessions       Session[]
+  orders         MarketOrder[]
+  ledgerEntries  WalletLedgerEntry[]
+  topups         VcoinTopupIntent[]
+  tokenPurchases TokenPurchase[]
+  deliveries     DeliveryInstruction[]
+  mallOrders     MallOrder[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  accountId String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([expiresAt])
+}
+
+model Wallet {
+  id              String   @id @default(cuid())
+  accountId       String   @unique
+  vcoinAvailable  Decimal  @default(0) @db.Decimal(18, 4)
+  vcoinReserved   Decimal  @default(0) @db.Decimal(18, 4)
+  tokenBalance    Decimal  @default(0) @db.Decimal(18, 8)
+  updatedAt       DateTime @updatedAt
+  account         Account  @relation(fields: [accountId], references: [id])
+}
+
+model PriceTick {
+  id             String   @id @default(cuid())
+  priceCnyKwh    Decimal  @db.Decimal(10, 4)
+  gridLoadMw     Int
+  renewableShare Int
+  trend          String
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model MarketOrder {
+  id               String      @id @default(cuid())
+  accountId        String
+  side             OrderSide
+  quantityKwh      Decimal     @db.Decimal(18, 4)
+  remainingKwh     Decimal     @db.Decimal(18, 4)
+  limitPriceCnyKwh Decimal     @db.Decimal(10, 4)
+  status           OrderStatus @default(OPEN)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  account          Account     @relation(fields: [accountId], references: [id])
+  buyTrades        Trade[]     @relation("BuyOrder")
+  sellTrades       Trade[]     @relation("SellOrder")
+
+  @@index([side, status, limitPriceCnyKwh])
+  @@index([accountId, createdAt])
+}
+
+model Trade {
+  id           String      @id @default(cuid())
+  buyOrderId   String
+  sellOrderId  String
+  quantityKwh  Decimal     @db.Decimal(18, 4)
+  priceCnyKwh  Decimal     @db.Decimal(10, 4)
+  notionalVcoin Decimal    @db.Decimal(18, 4)
+  createdAt    DateTime    @default(now())
+  buyOrder     MarketOrder @relation("BuyOrder", fields: [buyOrderId], references: [id])
+  sellOrder    MarketOrder @relation("SellOrder", fields: [sellOrderId], references: [id])
+
+  @@index([createdAt])
+}
+
+model WalletLedgerEntry {
+  id            String     @id @default(cuid())
+  accountId     String
+  type          LedgerType
+  amountVcoin   Decimal    @db.Decimal(18, 4)
+  balanceAfter  Decimal    @db.Decimal(18, 4)
+  description   String
+  referenceId   String?
+  createdAt     DateTime   @default(now())
+  account       Account    @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([referenceId])
+}
+
+model VcoinTopupIntent {
+  id          String      @id @default(cuid())
+  accountId   String
+  amountCny   Decimal     @db.Decimal(18, 2)
+  currency    String      @default("USD")
+  amountVcoin Decimal     @db.Decimal(18, 4)
+  provider    String
+  status      TopupStatus @default(CREATED)
+  checkoutUrl String
+  providerRef String?
+  createdAt   DateTime    @default(now())
+  confirmedAt DateTime?
+  account     Account     @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([providerRef])
+}
+
+model MallProduct {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  name        String
+  category    String
+  description String
+  priceVcoin  Decimal         @db.Decimal(18, 4)
+  stock       Int
+  active      Boolean         @default(true)
+  specs       Json?
+  imageUrl    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  orderItems  MallOrderItem[]
+
+  @@index([active, category])
+}
+
+model MallOrder {
+  id           String          @id @default(cuid())
+  accountId    String
+  status       MallOrderStatus @default(PAID)
+  totalVcoin   Decimal         @db.Decimal(18, 4)
+  receiverName String
+  address      String
+  meterNo      String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  account      Account         @relation(fields: [accountId], references: [id])
+  items        MallOrderItem[]
+
+  @@index([accountId, createdAt])
+  @@index([status])
+}
+
+model MallOrderItem {
+  id             String      @id @default(cuid())
+  orderId        String
+  productId      String
+  productName    String
+  unitPriceVcoin Decimal     @db.Decimal(18, 4)
+  quantity       Int
+  totalVcoin     Decimal     @db.Decimal(18, 4)
+  order          MallOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        MallProduct @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model TokenPurchase {
+  id              String              @id @default(cuid())
+  accountId       String
+  chainId         Int
+  network         String
+  tokenAmount     Decimal             @db.Decimal(18, 8)
+  costVcoin       Decimal             @db.Decimal(18, 4)
+  walletAddress   String
+  contractAddress String
+  status          TokenPurchaseStatus @default(REQUESTED)
+  transactionHash String?
+  mode            String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  account         Account             @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([transactionHash])
+}
+
+model DeliveryInstruction {
+  id                String         @id @default(cuid())
+  accountId         String
+  tradeId           String?
+  meterNo           String
+  quantityKwh       Decimal        @db.Decimal(18, 4)
+  deliveryWindow    String
+  status            DeliveryStatus @default(DRAFT)
+  provider          String
+  externalReference String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  account           Account        @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([externalReference])
+}

@@ -1,0 +1,15 @@
+.env
+.env.local
+.DS_Store
+.next
+node_modules
+coverage
+dist
+playwright-report
+test-results
+*.tsbuildinfo
+prisma/dev.db
+public/uploads
+public/brand/volt-logo.png
+public/brand/volt-logo-generated.png
+public/brand/volt-logo-source.png

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" role="img" aria-labelledby="title desc">
+  <title id="title">VOLT+ logo</title>
+  <desc id="desc">VOLT+ white wordmark on teal background.</desc>
+  <rect width="640" height="220" rx="0" fill="#1fa19a"/>
+  <path
+    d="M112 70c-10-4-21 5-16 16l48 91c5 10 20 10 25 0l47-91c5-11-6-20-16-16l-39 15c-4 2-8 2-12 0l-37-15Z"
+    fill="#fff"
+  />
+  <path d="M104 91c13 14 32 15 49 4l-42-15c-9-3-15 4-7 11Z" fill="#1fa19a"/>
+  <text
+    x="250"
+    y="151"
+    fill="#fff"
+    font-family="Inter, Arial Black, Arial, sans-serif"
+    font-size="108"
+    font-weight="900"
+    letter-spacing="10"
+  >OLT</text>
+  <path d="M344 95h78v32h-78zM454 95h78v32h-78z" fill="#1fa19a"/>
+  <path d="M545 60h24v35h35v24h-35v35h-24v-35h-35V95h35z" fill="#fff"/>
+</svg>
