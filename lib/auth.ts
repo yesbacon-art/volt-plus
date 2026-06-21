@@ -2,7 +2,7 @@ import { randomBytes, createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import { hashPassword, verifyPassword } from "@/lib/password";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 
 const SESSION_COOKIE = "volt_session";
 const SESSION_DAYS = 30;
@@ -33,6 +33,8 @@ export function publicAccount(account: {
 }
 
 export async function getCurrentAccount() {
+  if (!isDatabaseConfigured()) return null;
+
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
@@ -67,6 +69,10 @@ export async function requireCurrentAccount() {
 }
 
 export async function createSessionCookie(response: NextResponse, accountId: string) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("账户登录需要先连接 PostgreSQL 数据库。");
+  }
+
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
 
@@ -89,7 +95,7 @@ export async function createSessionCookie(response: NextResponse, accountId: str
 
 export async function clearSessionCookie(response: NextResponse) {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (token) {
+  if (token && isDatabaseConfigured()) {
     await prisma.session
       .delete({ where: { tokenHash: hashSessionToken(token) } })
       .catch(() => undefined);

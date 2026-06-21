@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireCurrentAccount } from "@/lib/auth";
 import { createMallOrder, listMallOrders } from "@/lib/mall";
+import { isDatabaseConfigured } from "@/lib/prisma";
 
 const mallOrderSchema = z.object({
   items: z
@@ -19,6 +20,10 @@ const mallOrderSchema = z.object({
 
 export async function GET() {
   try {
+    if (!isDatabaseConfigured()) {
+      return NextResponse.json({ orders: [] });
+    }
+
     const account = await requireCurrentAccount();
     const orders = await listMallOrders(account.id);
     return NextResponse.json({ orders });
@@ -32,6 +37,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!isDatabaseConfigured()) {
+      return NextResponse.json(
+        { error: "V 币商城真实下单需要先连接 PostgreSQL 数据库。" },
+        { status: 503 }
+      );
+    }
+
     const account = await requireCurrentAccount();
     const body = mallOrderSchema.parse(await request.json());
     const order = await createMallOrder({

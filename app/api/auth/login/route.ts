@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSessionCookie, publicAccount, verifyPassword } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 
 const loginSchema = z.object({
   email: z.string().email("请输入有效邮箱。").transform((value) => value.toLowerCase()),
@@ -10,6 +10,13 @@ const loginSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    if (!isDatabaseConfigured()) {
+      return NextResponse.json(
+        { error: "账户登录需要先配置 DATABASE_URL 并执行 Prisma 迁移。" },
+        { status: 503 }
+      );
+    }
+
     const body = loginSchema.parse(await request.json());
     const account = await prisma.account.findUnique({
       where: { email: body.email }

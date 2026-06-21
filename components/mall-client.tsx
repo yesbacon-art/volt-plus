@@ -47,11 +47,12 @@ type MallOrder = {
 };
 
 type MallClientProps = {
+  databaseReady: boolean;
   initialProducts: Product[];
   initialSession: SessionState;
 };
 
-export function MallClient({ initialProducts, initialSession }: MallClientProps) {
+export function MallClient({ databaseReady, initialProducts, initialSession }: MallClientProps) {
   const [products, setProducts] = useState(initialProducts);
   const [session, setSession] = useState(initialSession);
   const [orders, setOrders] = useState<MallOrder[]>([]);
@@ -66,7 +67,11 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
   const [receiverName, setReceiverName] = useState("VOLT+ Buyer");
   const [address, setAddress] = useState("120 Energy Market Street, Singapore");
   const [meterNo, setMeterNo] = useState("METER-SG-8842");
-  const [notice, setNotice] = useState("V 币商城真实后端已就绪");
+  const [notice, setNotice] = useState(
+    databaseReady
+      ? "V 币商城真实后端已就绪"
+      : "公开展示模式：连接 PostgreSQL 后启用注册、充值和真实下单"
+  );
   const [pending, setPending] = useState<string | null>(null);
 
   const selectedProduct = useMemo(
@@ -117,6 +122,11 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
   }
 
   async function submitAuth() {
+    if (!databaseReady) {
+      setNotice("需要先在 Vercel 配置 DATABASE_URL 并执行 Prisma 迁移，才能注册/登录。");
+      return;
+    }
+
     setPending("auth");
     setNotice("正在处理账户");
     try {
@@ -153,6 +163,11 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
   }
 
   async function createTopup() {
+    if (!databaseReady) {
+      setNotice("需要先连接数据库和支付环境，才能创建真实 V 币充值。");
+      return;
+    }
+
     setPending("topup");
     setNotice("正在创建 Stripe Checkout");
     try {
@@ -183,6 +198,11 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
 
   async function purchaseProduct() {
     if (!selectedProduct) return;
+    if (!databaseReady) {
+      setNotice("需要先连接 PostgreSQL 数据库，才能生成真实商城订单。");
+      return;
+    }
+
     setPending("purchase");
     setNotice("正在提交商城订单");
     try {
@@ -257,15 +277,18 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
         <section className="grid min-h-[360px] grid-cols-[0.9fr_1.1fr] items-stretch gap-6 max-lg:grid-cols-1">
           <div className="grid content-center">
             <span className="w-max rounded-full border border-[#18d5c6]/30 bg-[#18d5c6]/10 px-3 py-2 text-xs font-black text-[#18d5c6]">
-              VOLT+ REAL COMMERCE
+              {databaseReady ? "VOLT+ REAL COMMERCE" : "VOLT+ PUBLIC PREVIEW"}
             </span>
             <h1 className="mt-5 text-5xl font-black leading-tight max-sm:text-4xl">
               V 币商城
-              <span className="block text-[#18d5c6]">真实账户 · 钱包账本 · 后端订单</span>
+              <span className="block text-[#18d5c6]">
+                {databaseReady ? "真实账户 · 钱包账本 · 后端订单" : "产品展示 · V 币定价 · 待接数据库"}
+              </span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[#c4d7db]">
-              这一版不再把余额和订单存在浏览器本地。登录后通过 Stripe 充值 V 币，商城购买会进入 PostgreSQL
-              钱包账本、库存和订单表。
+              {databaseReady
+                ? "这一版不再把余额和订单存在浏览器本地。登录后通过 Stripe 充值 V 币，商城购买会进入 PostgreSQL 钱包账本、库存和订单表。"
+                : "当前公网部署还没有连接生产数据库，所以先开放完整商城视觉和商品目录。连接 PostgreSQL 后，注册、充值和真实订单会立即启用。"}
             </p>
             <div className="mt-6 rounded-xl border border-[#18d5c6]/20 bg-[#0a1c2b]/80 p-4 text-sm font-extrabold text-[#d8fffb]">
               {notice}
@@ -291,9 +314,9 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
 
         <section className="grid grid-cols-4 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
           <Metric label="可用 V 币" value={`${format(balance)} V`} note="服务端钱包" />
-          <Metric label="商品 SKU" value={`${products.length}`} note="Postgres 商品表" />
-          <Metric label="我的订单" value={`${orders.length}`} note="商城订单表" />
-          <Metric label="支付通道" value="Stripe" note="Checkout + Webhook" />
+          <Metric label="商品 SKU" value={`${products.length}`} note={databaseReady ? "Postgres 商品表" : "内置商品目录"} />
+          <Metric label="我的订单" value={`${orders.length}`} note={databaseReady ? "商城订单表" : "待接数据库"} />
+          <Metric label="支付通道" value={databaseReady ? "Stripe" : "待配置"} note={databaseReady ? "Checkout + Webhook" : "连接后启用"} />
         </section>
 
         <section className="grid grid-cols-[1fr_390px] gap-5 max-xl:grid-cols-1">
@@ -301,7 +324,9 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
             <div className="mb-4 flex items-end justify-between gap-4">
               <div>
                 <h2 className="m-0 text-2xl font-black">产品购买</h2>
-                <p className="mt-2 text-[#9eb7bc]">商品、价格和库存来自数据库。</p>
+                <p className="mt-2 text-[#9eb7bc]">
+                  {databaseReady ? "商品、价格和库存来自数据库。" : "商品、价格和库存来自公开展示目录。"}
+                </p>
               </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-black text-[#d8fffb]">
                 V币结算
@@ -368,8 +393,8 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
                   )}
                   <Field label="邮箱" value={email} onChange={setEmail} />
                   <Field label="密码" value={password} onChange={setPassword} type="password" />
-                  <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a]" disabled={pending === "auth"} onClick={submitAuth} type="button">
-                    {authMode === "register" ? "创建真实账户" : "登录账户"}
+                  <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={!databaseReady || pending === "auth"} onClick={submitAuth} type="button">
+                    {databaseReady ? (authMode === "register" ? "创建真实账户" : "登录账户") : "待连接数据库"}
                   </button>
                 </div>
               )}
@@ -381,8 +406,8 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
                   <Field label="金额" value={String(amountFiat)} onChange={(value) => setAmountFiat(Number(value) || 0)} type="number" />
                   <Field label="币种" value={currency} onChange={(value) => setCurrency(value.toUpperCase())} />
                 </div>
-                <button className="rounded-lg border border-[#18d5c6]/40 bg-[#18d5c6]/10 px-4 py-3 font-black text-[#18d5c6]" disabled={!session.account || pending === "topup"} onClick={createTopup} type="button">
-                  创建 Checkout
+                <button className="rounded-lg border border-[#18d5c6]/40 bg-[#18d5c6]/10 px-4 py-3 font-black text-[#18d5c6] disabled:opacity-50" disabled={!databaseReady || !session.account || pending === "topup"} onClick={createTopup} type="button">
+                  {databaseReady ? "创建 Checkout" : "待连接支付"}
                 </button>
               </div>
             </Panel>
@@ -399,8 +424,8 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
                 <Field label="收货人 / 企业" value={receiverName} onChange={setReceiverName} />
                 <Field label="收货 / 服务地址" value={address} onChange={setAddress} />
                 <Field label="绑定电表 / 服务编号" value={meterNo} onChange={setMeterNo} />
-                <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={!session.account || !selectedProduct || pending === "purchase"} onClick={purchaseProduct} type="button">
-                  确认 V币购买
+                <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={!databaseReady || !session.account || !selectedProduct || pending === "purchase"} onClick={purchaseProduct} type="button">
+                  {databaseReady ? "确认 V币购买" : "待连接数据库"}
                 </button>
               </div>
             </Panel>
@@ -409,7 +434,7 @@ export function MallClient({ initialProducts, initialSession }: MallClientProps)
               <div className="grid max-h-80 gap-3 overflow-auto pr-1">
                 {orders.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-white/15 p-4 text-center text-sm text-[#9eb7bc]">
-                    登录并购买后会出现真实订单记录。
+                    {databaseReady ? "登录并购买后会出现真实订单记录。" : "连接数据库后会展示真实订单记录。"}
                   </div>
                 ) : (
                   orders.map((order) => (

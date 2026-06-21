@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { isDatabaseConfigured, prisma } from "@/lib/prisma";
 
 export const DEFAULT_MALL_PRODUCTS = [
   {
@@ -69,7 +69,28 @@ export type CreateMallOrderInput = {
   meterNo: string;
 };
 
+export type MallProductView = {
+  id: string;
+  slug: string;
+  name: string;
+  category: string;
+  description: string;
+  priceVcoin: number | Prisma.Decimal;
+  stock: number;
+  specs: unknown;
+};
+
+export function listFallbackMallProducts(): MallProductView[] {
+  return DEFAULT_MALL_PRODUCTS.map((product) => ({
+    id: `demo_${product.slug}`,
+    ...product,
+    specs: [...product.specs]
+  }));
+}
+
 export async function ensureMallProducts() {
+  if (!isDatabaseConfigured()) return;
+
   const count = await prisma.mallProduct.count();
   if (count > 0) return;
 
@@ -83,14 +104,25 @@ export async function ensureMallProducts() {
 }
 
 export async function listMallProducts() {
+  if (!isDatabaseConfigured()) {
+    return listFallbackMallProducts();
+  }
+
   await ensureMallProducts();
-  return prisma.mallProduct.findMany({
-    where: { active: true },
-    orderBy: [{ category: "asc" }, { priceVcoin: "desc" }]
-  });
+  try {
+    return await prisma.mallProduct.findMany({
+      where: { active: true },
+      orderBy: [{ category: "asc" }, { priceVcoin: "desc" }]
+    });
+  } catch (error) {
+    console.warn("Mall database unavailable, using fallback products.", error);
+    return listFallbackMallProducts();
+  }
 }
 
 export async function listMallOrders(accountId: string) {
+  if (!isDatabaseConfigured()) return [];
+
   return prisma.mallOrder.findMany({
     where: { accountId },
     include: {
@@ -102,6 +134,10 @@ export async function listMallOrders(accountId: string) {
 }
 
 export async function createMallOrder(input: CreateMallOrderInput) {
+  if (!isDatabaseConfigured()) {
+    throw new Error("V 币商城真实下单需要先连接 PostgreSQL 数据库。");
+  }
+
   const normalizedItems = input.items
     .map((item) => ({
       productId: item.productId,

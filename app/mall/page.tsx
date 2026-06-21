@@ -1,5 +1,6 @@
 import { getCurrentAccount, publicAccount } from "@/lib/auth";
 import { listMallProducts } from "@/lib/mall";
+import { isDatabaseConfigured } from "@/lib/prisma";
 import { MallClient } from "@/components/mall-client";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ export default async function MallPage() {
 
   return (
     <MallClient
+      databaseReady={isDatabaseConfigured()}
       initialProducts={products.map((product) => ({
         id: product.id,
         slug: product.slug,

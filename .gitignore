@@ -3,6 +3,7 @@
 .DS_Store
 .next
 node_modules
+.pnpm-store
 coverage
 dist
 playwright-report
