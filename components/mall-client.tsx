@@ -52,6 +52,8 @@ type MallClientProps = {
   initialSession: SessionState;
 };
 
+const SANDBOX_STORAGE_KEY = "volt_plus_mall_sandbox_v1";
+
 export function MallClient({ databaseReady, initialProducts, initialSession }: MallClientProps) {
   const [products, setProducts] = useState(initialProducts);
   const [session, setSession] = useState(initialSession);
@@ -70,7 +72,7 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
   const [notice, setNotice] = useState(
     databaseReady
       ? "V 币商城真实后端已就绪"
-      : "公开展示模式：连接 PostgreSQL 后启用注册、充值和真实下单"
+      : "V 币商城沙盒已就绪：可注册、充值、购买和查看订单"
   );
   const [pending, setPending] = useState<string | null>(null);
 
@@ -81,12 +83,23 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
 
   const totalVcoin = selectedProduct ? selectedProduct.priceVcoin * quantity : 0;
   const balance = Number(session.wallet?.vcoinAvailable ?? 0);
+  const accountId = session.account?.id;
 
   useEffect(() => {
-    if (session.account) {
+    if (databaseReady) return;
+
+    const saved = readSandboxState();
+    if (saved) {
+      setSession(saved.session);
+      setOrders(saved.orders);
+    }
+  }, [databaseReady]);
+
+  useEffect(() => {
+    if (databaseReady && accountId) {
       void refreshOrders();
     }
-  }, [session.account?.id]);
+  }, [databaseReady, accountId]);
 
   async function refreshSession() {
     const response = await fetch("/api/auth/session");
@@ -123,7 +136,25 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
 
   async function submitAuth() {
     if (!databaseReady) {
-      setNotice("需要先在 Vercel 配置 DATABASE_URL 并执行 Prisma 迁移，才能注册/登录。");
+      setPending("auth");
+      const nextSession: SessionState = {
+        account: {
+          id: `sandbox_${email.toLowerCase().replace(/[^a-z0-9]/g, "_")}`,
+          email,
+          phone: null,
+          displayName: authMode === "register" ? displayName : displayName || "VOLT+ Buyer",
+          kycStatus: "SANDBOX"
+        },
+        wallet: session.wallet ?? {
+          vcoinAvailable: 12800,
+          vcoinReserved: 0,
+          tokenBalance: 0
+        }
+      };
+      setSession(nextSession);
+      writeSandboxState(nextSession, orders);
+      setNotice(authMode === "register" ? "沙盒账户创建成功，已登录" : "沙盒登录成功");
+      setPending(null);
       return;
     }
 
@@ -154,6 +185,14 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
   }
 
   async function logout() {
+    if (!databaseReady) {
+      window.localStorage.removeItem(SANDBOX_STORAGE_KEY);
+      setSession({ account: null, wallet: null });
+      setOrders([]);
+      setNotice("已退出沙盒账户");
+      return;
+    }
+
     setPending("logout");
     await fetch("/api/auth/logout", { method: "POST" });
     setSession({ account: null, wallet: null });
@@ -164,7 +203,23 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
 
   async function createTopup() {
     if (!databaseReady) {
-      setNotice("需要先连接数据库和支付环境，才能创建真实 V 币充值。");
+      if (!session.account) {
+        setNotice("请先注册或登录沙盒账户。");
+        return;
+      }
+
+      const amountVcoin = fiatToSandboxVcoin(amountFiat, currency);
+      const nextSession: SessionState = {
+        ...session,
+        wallet: {
+          vcoinAvailable: Number((balance + amountVcoin).toFixed(4)),
+          vcoinReserved: Number(session.wallet?.vcoinReserved ?? 0),
+          tokenBalance: Number(session.wallet?.tokenBalance ?? 0)
+        }
+      };
+      setSession(nextSession);
+      writeSandboxState(nextSession, orders);
+      setNotice(`沙盒充值成功，已入账 ${format(amountVcoin)} V 币`);
       return;
     }
 
@@ -199,7 +254,55 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
   async function purchaseProduct() {
     if (!selectedProduct) return;
     if (!databaseReady) {
-      setNotice("需要先连接 PostgreSQL 数据库，才能生成真实商城订单。");
+      if (!session.account || !session.wallet) {
+        setNotice("请先注册或登录沙盒账户。");
+        return;
+      }
+      if (quantity > selectedProduct.stock) {
+        setNotice(`${selectedProduct.name} 库存不足。`);
+        return;
+      }
+      if (balance < totalVcoin) {
+        setNotice("V 币余额不足，请先进行沙盒充值。");
+        return;
+      }
+
+      const order: MallOrder = {
+        id: `sandbox_order_${Date.now()}`,
+        status: "PAID",
+        totalVcoin,
+        receiverName,
+        address,
+        meterNo,
+        createdAt: new Date().toISOString(),
+        items: [
+          {
+            id: `sandbox_item_${selectedProduct.id}`,
+            productName: selectedProduct.name,
+            quantity,
+            totalVcoin
+          }
+        ]
+      };
+      const nextSession: SessionState = {
+        ...session,
+        wallet: {
+          ...session.wallet,
+          vcoinAvailable: Number((balance - totalVcoin).toFixed(4))
+        }
+      };
+      const nextOrders = [order, ...orders];
+      setSession(nextSession);
+      setOrders(nextOrders);
+      setProducts((currentProducts) =>
+        currentProducts.map((product) =>
+          product.id === selectedProduct.id
+            ? { ...product, stock: Math.max(0, product.stock - quantity) }
+            : product
+        )
+      );
+      writeSandboxState(nextSession, nextOrders);
+      setNotice(`沙盒购买成功，已扣除 ${format(totalVcoin)} V 币`);
       return;
     }
 
@@ -277,18 +380,18 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
         <section className="grid min-h-[360px] grid-cols-[0.9fr_1.1fr] items-stretch gap-6 max-lg:grid-cols-1">
           <div className="grid content-center">
             <span className="w-max rounded-full border border-[#18d5c6]/30 bg-[#18d5c6]/10 px-3 py-2 text-xs font-black text-[#18d5c6]">
-              {databaseReady ? "VOLT+ REAL COMMERCE" : "VOLT+ PUBLIC PREVIEW"}
+              {databaseReady ? "VOLT+ REAL COMMERCE" : "VOLT+ SANDBOX COMMERCE"}
             </span>
             <h1 className="mt-5 text-5xl font-black leading-tight max-sm:text-4xl">
               V 币商城
               <span className="block text-[#18d5c6]">
-                {databaseReady ? "真实账户 · 钱包账本 · 后端订单" : "产品展示 · V 币定价 · 待接数据库"}
+                {databaseReady ? "真实账户 · 钱包账本 · 后端订单" : "沙盒账户 · V 币充值 · 商品购买"}
               </span>
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-[#c4d7db]">
               {databaseReady
                 ? "这一版不再把余额和订单存在浏览器本地。登录后通过 Stripe 充值 V 币，商城购买会进入 PostgreSQL 钱包账本、库存和订单表。"
-                : "当前公网部署还没有连接生产数据库，所以先开放完整商城视觉和商品目录。连接 PostgreSQL 后，注册、充值和真实订单会立即启用。"}
+                : "当前公网版本先运行完整沙盒交易：注册/登录、V 币充值、商品购买和订单记录都可以直接操作；连接 PostgreSQL 后会自动切换到真实后端。"}
             </p>
             <div className="mt-6 rounded-xl border border-[#18d5c6]/20 bg-[#0a1c2b]/80 p-4 text-sm font-extrabold text-[#d8fffb]">
               {notice}
@@ -313,10 +416,10 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
         </section>
 
         <section className="grid grid-cols-4 gap-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
-          <Metric label="可用 V 币" value={`${format(balance)} V`} note="服务端钱包" />
-          <Metric label="商品 SKU" value={`${products.length}`} note={databaseReady ? "Postgres 商品表" : "内置商品目录"} />
-          <Metric label="我的订单" value={`${orders.length}`} note={databaseReady ? "商城订单表" : "待接数据库"} />
-          <Metric label="支付通道" value={databaseReady ? "Stripe" : "待配置"} note={databaseReady ? "Checkout + Webhook" : "连接后启用"} />
+          <Metric label="可用 V 币" value={`${format(balance)} V`} note={databaseReady ? "服务端钱包" : "沙盒钱包"} />
+          <Metric label="商品 SKU" value={`${products.length}`} note={databaseReady ? "Postgres 商品表" : "沙盒商品目录"} />
+          <Metric label="我的订单" value={`${orders.length}`} note={databaseReady ? "商城订单表" : "本地沙盒订单"} />
+          <Metric label="支付通道" value={databaseReady ? "Stripe" : "Sandbox"} note={databaseReady ? "Checkout + Webhook" : "即时充值入账"} />
         </section>
 
         <section className="grid grid-cols-[1fr_390px] gap-5 max-xl:grid-cols-1">
@@ -325,7 +428,7 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
               <div>
                 <h2 className="m-0 text-2xl font-black">产品购买</h2>
                 <p className="mt-2 text-[#9eb7bc]">
-                  {databaseReady ? "商品、价格和库存来自数据库。" : "商品、价格和库存来自公开展示目录。"}
+                  {databaseReady ? "商品、价格和库存来自数据库。" : "商品、价格和库存来自沙盒目录，购买后会生成订单。"}
                 </p>
               </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-black text-[#d8fffb]">
@@ -393,21 +496,27 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
                   )}
                   <Field label="邮箱" value={email} onChange={setEmail} />
                   <Field label="密码" value={password} onChange={setPassword} type="password" />
-                  <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={!databaseReady || pending === "auth"} onClick={submitAuth} type="button">
-                    {databaseReady ? (authMode === "register" ? "创建真实账户" : "登录账户") : "待连接数据库"}
+                  <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={pending === "auth"} onClick={submitAuth} type="button">
+                    {databaseReady
+                      ? authMode === "register"
+                        ? "创建真实账户"
+                        : "登录账户"
+                      : authMode === "register"
+                        ? "创建沙盒账户"
+                        : "登录沙盒账户"}
                   </button>
                 </div>
               )}
             </Panel>
 
-            <Panel title="Stripe 充值 V 币">
+            <Panel title={databaseReady ? "Stripe 充值 V 币" : "沙盒充值 V 币"}>
               <div className="grid gap-3">
                 <div className="grid grid-cols-[1fr_90px] gap-2">
                   <Field label="金额" value={String(amountFiat)} onChange={(value) => setAmountFiat(Number(value) || 0)} type="number" />
                   <Field label="币种" value={currency} onChange={(value) => setCurrency(value.toUpperCase())} />
                 </div>
-                <button className="rounded-lg border border-[#18d5c6]/40 bg-[#18d5c6]/10 px-4 py-3 font-black text-[#18d5c6] disabled:opacity-50" disabled={!databaseReady || !session.account || pending === "topup"} onClick={createTopup} type="button">
-                  {databaseReady ? "创建 Checkout" : "待连接支付"}
+                <button className="rounded-lg border border-[#18d5c6]/40 bg-[#18d5c6]/10 px-4 py-3 font-black text-[#18d5c6] disabled:opacity-50" disabled={!session.account || pending === "topup"} onClick={createTopup} type="button">
+                  {databaseReady ? "创建 Checkout" : "立即入账"}
                 </button>
               </div>
             </Panel>
@@ -424,8 +533,8 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
                 <Field label="收货人 / 企业" value={receiverName} onChange={setReceiverName} />
                 <Field label="收货 / 服务地址" value={address} onChange={setAddress} />
                 <Field label="绑定电表 / 服务编号" value={meterNo} onChange={setMeterNo} />
-                <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={!databaseReady || !session.account || !selectedProduct || pending === "purchase"} onClick={purchaseProduct} type="button">
-                  {databaseReady ? "确认 V币购买" : "待连接数据库"}
+                <button className="rounded-lg bg-[#18d5c6] px-4 py-3 font-black text-[#03171a] disabled:opacity-50" disabled={!session.account || !selectedProduct || pending === "purchase"} onClick={purchaseProduct} type="button">
+                  确认 V币购买
                 </button>
               </div>
             </Panel>
@@ -434,7 +543,7 @@ export function MallClient({ databaseReady, initialProducts, initialSession }: M
               <div className="grid max-h-80 gap-3 overflow-auto pr-1">
                 {orders.length === 0 ? (
                   <div className="rounded-lg border border-dashed border-white/15 p-4 text-center text-sm text-[#9eb7bc]">
-                    {databaseReady ? "登录并购买后会出现真实订单记录。" : "连接数据库后会展示真实订单记录。"}
+                    登录并购买后会出现订单记录。
                   </div>
                 ) : (
                   orders.map((order) => (
@@ -509,4 +618,33 @@ function tabClass(active: boolean) {
 
 function format(value: number) {
   return Number(value).toLocaleString("zh-CN", { maximumFractionDigits: 0 });
+}
+
+function fiatToSandboxVcoin(amountFiat: number, currency: string) {
+  const rate = currency.toUpperCase() === "CNY" ? 10 : 100;
+  return Number((amountFiat * rate).toFixed(4));
+}
+
+function readSandboxState() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(SANDBOX_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as { session: SessionState; orders: MallOrder[] };
+  } catch {
+    return null;
+  }
+}
+
+function writeSandboxState(session: SessionState, orders: MallOrder[]) {
+  if (typeof window === "undefined") return;
+
+  window.localStorage.setItem(
+    SANDBOX_STORAGE_KEY,
+    JSON.stringify({
+      session,
+      orders
+    })
+  );
 }
